@@ -39,7 +39,6 @@ backup_file="$path_backup/bdd$(hostname)-$(date '+%Y%m%d').sql.gz"
 
 # dump de la base de données
 mysqldump --default-character-set=latin1 -u "$user" -p"$mdp" "$bdd" | gzip > "$backup_file"
-tar -czf "$backup_file.tar.gz" "$backup_file"
 
 if [ $? -eq 0 ]; then
     echo "La sauvegarde a été effectuée avec succès dans $backup_file"
