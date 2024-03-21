@@ -16,7 +16,6 @@ latest_db=$(ls -lrt $CHEMIN | grep ".sql.gz" | tail -n 1 | cut -d ":" -f 2 | cut
 gunzip $CHEMIN/$latest_db
 echo $latest_db
 
-
 latest_sql=$(ls -lrt $CHEMIN | grep ".sql" | tail -n 1 | cut -d ":" -f 2 | cut -d " " -f 2);
 mysql $user $mdp $bdd < $CHEMIN/$latest_sql
 echo $latest_sql
