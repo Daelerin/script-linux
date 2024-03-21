@@ -38,7 +38,7 @@ latest_sql=$(ls -lrt "$CHEMIN" | grep "\.sql" | tail -n 1 | awk '{print $9}')
 
 # Importez le fichier .sql le plus récent dans la base de données spécifiée
 echo "Importation de la sauvegarde $latest_sql dans la base de données $dbname..."
-mysql $user:$passwd@$dbname < "$CHEMIN/$latest_sql"
+mysql -u $user -p$passwd $dbname < "$CHEMIN/$latest_sql"
 
 # Vérifiez si l'importation s'est déroulée sans erreur
 if [ $? -eq 0 ]; then
