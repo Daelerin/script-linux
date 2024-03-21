@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # script de sauvegarde automatique
 
 # Demande des variables à l'utilisateur
