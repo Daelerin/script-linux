@@ -1,0 +1,27 @@
+all:
+  children:
+    expose:
+      hosts:
+         172.16.150.10:
+         172.16.150.11:
+         172.16.100.36:
+            ansible_port: 22464
+
+    security:
+      hosts:
+      172.16.100.33:
+         ansible_os_family: RedHat
+      172.16.100.35:
+
+redhat:
+  hosts:
+    172.16.100.33:
+      ansible_os_family: RedHat
+
+debian:
+  hosts:
+   172.16.150.10:
+   172.16.150.11:
+   172.16.100.35:
+   172.16.100.36:
+      ansible_port: 22464
