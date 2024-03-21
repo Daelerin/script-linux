@@ -1,13 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
 # Demandez à l'utilisateur le chemin de la sauvegarde
-echo -n "Entrez le chemin vers votre backup"
+echo -n "Entrez le chemin vers votre backup: "
 read CHEMIN
 
 # Demandez à l'utilisateur son nom d'utilisateur, son mot de passe et le nom de sa base de données
 echo -n "Entrez le nom de votre utilisateur : "
 read user
-echo -n "Entrez le mot de passe pour l'utilisateur $user"
+echo -n "Entrez le mot de passe pour l'utilisateur $user : "
 read -s passwd
 echo -n "Entrez la basse de donnée : "
 read dbname
