@@ -3,8 +3,7 @@
 # script de sauvegarde automatique
 
 # Demande des variables à l'utilisateur
-echo -n "Entrez le chemin vers le dossier de sauvegarde: "
-read path_backup
+path_backup= "/tmp" # Chemin ou sera stocké le fichié de backup 
 if [ ! -d "$path_backup" ]; then
     echo "Le chemin vers le dossier de sauvegarde doit être un dossier existant."
     exit 1
@@ -30,7 +29,7 @@ fi
 trap cleanup SIGINT SIGTERM
 
 cleanup() {
-  echo "Interrupted, cleaning up..."
+  echo "Interrupion, nettoyage encours..."
   exit 1
 }
 
@@ -42,6 +41,8 @@ mysqldump --default-character-set=latin1 -u "$user" -p"$mdp" "$bdd" | gzip > "$b
 
 if [ $? -eq 0 ]; then
     echo "La sauvegarde a été effectuée avec succès dans $backup_file"
+    echo -n "supprésion du scipt"
+    rm backup_bdd.sh
 else
     echo "Une erreur s'est produite lors de la sauvegarde."
     exit 1
