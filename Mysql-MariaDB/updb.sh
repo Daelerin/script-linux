@@ -4,10 +4,6 @@
 echo -n "Entrez le chemin vers votre backup"
 read CHEMIN
 
-# Extrayez le fichier .tar.gz le plus récent dans le répertoire racine
-latest_backup=$(ls -lrt $CHEMIN | grep ".tar.gz" | tail -n 1 | cut -d ":" -f 2 | cut -d " " -f 2)
-tar -zxvf $CHEMIN/$latest_backup -C /
-
 # Demandez à l'utilisateur son nom d'utilisateur, son mot de passe et le nom de sa base de données
 echo -n "Entrez le nom de votre utilisateur : "
 read user
