@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# installation de curl si il n'est pas présent
+if ! command -v curl &> /dev/null
+then
+    echo "Installation de curl"
+    apt install -y curl
+fi
+
 printf "Backup des fichiers de configuration, du répertoire 'files', du marketplace et des plugins\n"
 
 backup_dir="$HOME/backup"
