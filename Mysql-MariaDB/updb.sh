@@ -30,7 +30,7 @@ if [ -z "$latest_db" ]; then
     exit 1
 fi
 
-# Décompressez le fichier .sql.gz le plus récent
+# Décompressez le fichier .sql.gz
 gunzip "$CHEMIN/$latest_db"
 
 # Trouvez le fichier .sql le plus récent dans le répertoire de sauvegarde
