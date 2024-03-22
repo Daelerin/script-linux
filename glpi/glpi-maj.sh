@@ -4,7 +4,16 @@
 if ! command -v curl &> /dev/null
 then
     echo "Installation de curl"
-    apt install -y curl
+    distribution=$(lsb_release -i -s)
+    if [ "$distribution" = "Ubuntu" ] || [ "$distribution" = "Debian" ]; then
+        apt update
+        apt install -y curl
+    elif [ "$distribution" = "CentOS" ] || [ "$distribution" = "RedHat" ]; then
+        yum install -y curl
+    else
+        echo "La distribution $distribution n'est pas prise en charge pour l'installation de curl."
+        exit 1
+    fi
 fi
 
 # gestion des signaux
