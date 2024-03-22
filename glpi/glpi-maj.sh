@@ -7,6 +7,9 @@ then
     apt install -y curl
 fi
 
+# gestion des signaux
+trap 'echo "Signal SIGINT, SIGOUT ou SIGTERM reçu. Sortie..."; exit 1' SIGINT SIGOUT SIGTERM
+
 printf "Backup des fichiers de configuration, du répertoire 'files', du marketplace et des plugins\n"
 
 backup_dir="$HOME/backup"
@@ -49,12 +52,16 @@ fi
 
 printf "Mise à jour du backend terminée passée par l'interface web pour la suite. \n"
 
-#On supprime les archives plus anciennes que 30 jours
-if [ -d "$backup_dir" ]; then
-    printf "Suppression des fichiers de backup plus anciens que 30 jours.\n"
-    find "$backup_dir" -type f -name "*backup*" -mtime +30 -exec rm {} \;
-else
-    echo "Le répertoire de backup n'existe pas";
+# On demande à l'utilisateur s'il veut supprimer les sauvegardes
+echo "Voulez-vous supprimer les sauvegardes ? (o/n)"
+read answer
+if [[ $answer =~ ^[oO]$ ]]; then
+    if [ -d "$backup_dir" ]; then
+        printf "Suppression de tous les fichiers de backup.\n"
+        rm -f "$backup_dir"/*
+    else
+        echo "Le répertoire de backup n'existe pas";
+    fi
 fi
 
 exit 0;
