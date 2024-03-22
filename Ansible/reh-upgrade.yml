@@ -1,18 +1,14 @@
----
-- name: Mettre à jour les packages Red Hat
+- name: Update Red Hat packages
   hosts: redhat
-  become: no
+  become: yes
   tasks:
-    - name: Mettre à jour la liste des paquets
+    - name: Update package list
       yum:
         name: '*'
         state: latest
         update_cache: yes
 
-    - name: Mettre à jour les paquets installés
+    - name: Update installed packages
       yum:
-        name: '{{ ansible_facts.packages | difference(ansible_facts.packages_upgradable) }}'
+        name: "{{ ansible_facts.packages | difference(ansible_facts.packages_upgradable) }}"
         state: latest
-
-
-        reh-upgrade.yml
