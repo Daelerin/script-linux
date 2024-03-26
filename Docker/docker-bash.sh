@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fonction pour attacher un conteneur et ouvrir l'invite de commandes interactive
+# Fonction pour attacher un conteneur et ouvrir une invite de commandes interactive
 function attach_container() {
   docker exec -ti $1 bash
 }
@@ -9,7 +9,7 @@ function attach_container() {
 echo "Liste des conteneurs disponibles :"
 containers=$(docker ps --format "{{.Names}} {{.Image}}")
 
-# Paginer la liste si elle contient plus de 10 éléments
+# Afficher la liste paginée si elle contient plus de 10 éléments
 if [ $(echo "$containers" | wc -l) -gt 10 ]; then
   echo "$containers" | page
 else
@@ -25,10 +25,12 @@ if [ $choix -lt 1 ] || [ $choix -gt $(echo "$containers" | wc -l) ]; then
   exit 1
 fi
 
-# Obtenir le nom du conteneur et l'image sélectionnée
-selected_container_index=$((choix - 1))
-selected_container=$(echo "$containers" | awk -v i=$selected_container_index '{print $1}' | sed -n ${i}p)
-selected_image=$(echo "$containers" | awk -v i=$selected_container_index '{print $2}' | sed -n ${i}p)
+# Option pour sélectionner le conteneur souhaité en se basant sur la valeur de choix
+index_container_select=$(($choix - 1))
+selected_container=$(awk -v i=$index_container_select '{ print $1 }' <<< "$containers")
+
+# Entrer dans le conteneur
+attach_container $selected_container
 
 # Vérifier si le conteneur est en cours d'exécution
 if [ "$(docker inspect -f "{{.State.Status}}" $selected_container)" != "running" ]; then
