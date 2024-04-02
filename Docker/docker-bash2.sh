@@ -6,13 +6,14 @@ function attach_container() {
 
 # Afficher la liste des conteneurs en cours d'exécution
 echo "Liste des conteneurs disponibles :"
-containers=$(docker ps --format "{{.Names}} {{.Image}}")
+containers=$(docker ps --no-trunc --format "{{.Names}} {{.Image}}")
 # Tentative d'indexation 
 index=1
 for container in $containers 
 do
-  name=$(echo $container | awk '{print $1}')
-  image=$(echo $container | awk '{print $2}')
+  name=$(echo $container | cut -d, -f1)
+  image=$(echo $container | cut -d, -f2)
+  echo $container | awk -F' ' '{print $index++ ". Nom: "$1", Image: "$2}'
   echo "$index. Nom: $name, Image: $image"
   ((index++))
 done
