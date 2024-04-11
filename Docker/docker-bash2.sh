@@ -1,4 +1,6 @@
 #!/bin/bash
+# TODO : modification nécéssaire de l'affichage des contenneur pour afficher le nom et l'image avec sur la même ligne
+
 # Fonction pour attacher un conteneur et ouvrir une invite de commandes interactive
 function attach_container() {
   docker exec -ti $1 bash
