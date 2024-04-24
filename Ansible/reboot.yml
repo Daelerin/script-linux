@@ -1,0 +1,25 @@
+---
+- name: Redémarrage des serveurs et vérification de leur disponibilité
+  hosts: reboot
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: Redémarrage du serveur
+      reboot:
+
+    - name: Attente du redémarrage du serveur
+      wait_for_connection:
+        delay: 30
+        timeout: 180
+
+    - name: Vérification des services web en cours d'exécution
+      service_facts:
+      register: service_status
+
+    - name: Assurer que les services web sont activés et actifs
+      service:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      loop: "{{ service_status.ansible_facts.services | selectattr('state', 'equalto', 'stopped') | map(attribute='name') | list }}"
+      when: service_status.ansible_facts.services | selectattr('state', 'equalto', 'stopped') | length > 0
