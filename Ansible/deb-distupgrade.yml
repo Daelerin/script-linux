@@ -1,3 +1,4 @@
+---
 - name: Mettre à jour les packages Debian
   hosts: debian
   become: no
@@ -8,7 +9,7 @@
 
     - name: Mettre à jour les paquets installés
       apt:
-        upgrade: 'dist'
+        upgrade: dist
         purge: yes
         autoremove: yes
         autoclean: yes
