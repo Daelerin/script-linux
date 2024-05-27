@@ -1,7 +1,15 @@
+---
 - name: Update Red Hat packages
   hosts: redhat
   become: yes
   tasks:
+    - name: Gather facts
+      setup:
+
+    - name: get upgradable packages
+      yum:
+        list: updates
+      register: upgradable_packages
     - name: Update package list
       yum:
         name: '*'
@@ -10,5 +18,5 @@
 
     - name: Update installed packages
       yum:
-        name: "{{ ansible_facts.packages | difference(ansible_facts.packages_upgradable) }}"
+        name: "{{ upgradable_packages.results }}"
         state: latest
