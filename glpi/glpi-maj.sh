@@ -46,22 +46,16 @@ if [ -d "glpi" ]; then
     cd glpi || { echo "Le répertoire de GLPI n'existe pas"; exit 1; }
     tar -zxf "$tmpdir/glpi.tgz" --strip-components 1 || { echo "Échec de l'extraction de la mise à jour"; exit 1; }
     rm "$tmpdir/glpi.tgz"
+
+    # Supprimez les fichiers issus de versions précédentes de GLPI
+    find /var/www/glpi -type f -not -path "/var/www/glpi/config/*" -not -path "/var/www/glpi/files/*" -not -path "/var/www/glpi/marketplace/*" -not -path "/var/www/glpi/plugins/*" -delete
+
+    # Réappliquez les droits d'accès corrects
+    chown -R www-data:www-data /var/www/glpi/
 else
     echo "Le répertoire de GLPI n'existe pas";
 fi
 
-printf "Rapatriment des backups\n"
-cd /var/www/glpi || { echo "Le répertoire de GLPI n'existe pas"; exit 1; }
-if [ -f "$backup_dir/backup-$date_suffix.tar.gz" ]; then
-    tar -zxf "$backup_dir/backup-$date_suffix.tar.gz" || { echo "Échec de la restauration de la sauvegarde"; exit 1; }
-    chown -R www-data:www-data /var/www/glpi/
-else
-    echo "Aucune sauvegarde trouvée avec le suffixe $date_suffix";
-fi
-
-printf "Mise à jour du backend terminée passée par l'interface web pour la suite. \n"
-
-# On demande à l'utilisateur s'il veut supprimer les sauvegardes
 echo "Voulez-vous supprimer les sauvegardes ? (o/n)"
 read answer
 if [[ $answer =~ ^[oO]$ ]]; then
