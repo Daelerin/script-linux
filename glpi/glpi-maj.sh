@@ -54,7 +54,7 @@ printf "Rapatriment des backups\n"
 cd /var/www/glpi || { echo "Le répertoire de GLPI n'existe pas"; exit 1; }
 if [ -f "$backup_dir/backup-$date_suffix.tar.gz" ]; then
     tar -zxf "$backup_dir/backup-$date_suffix.tar.gz" || { echo "Échec de la restauration de la sauvegarde"; exit 1; }
-    chmod -R www-data:www-data /var/www/glpi/
+    chown -R www-data:www-data /var/www/glpi/
 else
     echo "Aucune sauvegarde trouvée avec le suffixe $date_suffix";
 fi
