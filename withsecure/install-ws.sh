@@ -2,10 +2,10 @@
 apt update
 apt install -y libcurl4 auditd libfuse2
 # Téléchargement du paquet depuis le site de withsecure en le placant dans le répertoire /tmp
-wget -O /tmp/f-secure-linuxsecurity.deb https://download.sp.f-secure.com/linuxsecurity64/f-secure-linuxsecurity.deb
+wget -O /tmp/linuxsecurity.deb https://download.withsecure.com/PSB/latest/linuxsecurity-installer.deb
 
 # Installation du paquet
-dpkg -i /tmp/f-secure-linuxsecurity.deb
+dpkg -i /tmp/linuxsecurity.deb
 
 # Activation de la clé 
 # Si la distribution est trop récente cela peut généré une erreur il y a cependant un moyen de coutournement par exemple 
