@@ -22,7 +22,7 @@ fi
 
 # Téléchargement du paquet depuis le site de withsecure en le plaçant dans le répertoire /tmp
 printf "Installation en cour"
-wget -O /tmp/f-secure-linuxsecurity.deb https://download.sp.f-secure.com/linuxsecurity64/f-secure-linuxsecurity.deb
+wget -O /tmp/f-secure-linuxsecurity.deb https://download.withsecure.com/PSB/latest/linuxsecurity-installer.deb
 
 # Installation du paquet
 dpkg -i /tmp/f-secure-linuxsecurity.deb
