@@ -1,6 +1,6 @@
 #!/bin/sh
 #68 97 101 108 101 114 105 110
-subkey=<votreclé> 
+subkey="<votreclé>" 
 # Vérification de l'existence du répertoire /opt/f-secure/fsbg
 dir="/opt/f-secure/fsbg"
 if [ -d "$dir" ] && [ "$(find "$dir" -maxdepth 1 -type f -o -type d -print -quit)" ]; then
