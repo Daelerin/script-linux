@@ -2,12 +2,35 @@
 apt update 
 echo "installation des dépendances"
 
-apt install -y libx11-xcb1 libxrandr2 libasound2 libpangocairo-1.0-0 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libnss3 libxss1
-wget -o /tmp/ https://github.com/PowerShell/PowerShell/releases/download/v7.4.5/powershell_7.4.5-1.deb_amd64.deb
-wget -o /tmp/ http://ftp.de.debian.org/debian/pool/main/p/python2.7/libpython2.7-stdlib_2.7.16-2+deb10u1_amd64.deb
-wget -o /tmp/ http://ftp.de.debian.org/debian/pool/main/p/python2.7/python2.7-minimal_2.7.16-2+deb10u1_amd64.deb
-wget -o /tmp/ http://ftp.de.debian.org/debian/pool/main/p/python2.7/python2.7_2.7.18-8+deb11u1_amd64.deb
-dpkg -i /tmp/powershell_7.4.5-1.deb_amd64.deb
-dpkg -i /tmp/libpython2.7-stdlib_2.7.16-2+deb10u1_amd64.deb
-dpkg -i /tmp/python2.7-minimal_2.7.16-2+deb10u1_amd64.deb
-dpkg -i /tmp/python2.7_2.7.18-8+deb11u1_amd64.deb
+apt install -y libx11-xcb1 libxrandr2 libasound2 libpangocairo-1.0-0 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libnss3 libxss1 libffi6 libssl1.1
+wget -O /tmp/powershell_7.4.5-1.deb https://github.com/PowerShell/PowerShell/releases/download/v7.4.5/powershell_7.4.5-1.deb_amd64.deb
+wget -O /tmp/libpython2.7-stdlib_2.7.16-2+deb10u1_amd64.deb http://ftp.de.debian.org/debian/pool/main/p/python2.7/libpython2.7-stdlib_2.7.16-2+deb10u1_amd64.deb
+wget -O /tmp/python2.7-minimal_2.7.16-2+deb10u1_amd64.deb http://ftp.de.debian.org/debian/pool/main/p/python2.7/python2.7-minimal_2.7.16-2+deb10u1_amd64.deb
+wget -O /tmp/python2.7_2.7.18-8+deb11u1_amd64.deb http://ftp.de.debian.org/debian/pool/main/p/python2.7/python2.7_2.7.18-8+deb11u1_amd64.deb
+
+apt install /tmp/powershell_7.4.5-1.deb
+apt install /tmp/libpython2.7-stdlib_2.7.16-2+deb10u1_amd64.deb
+apt install /tmp/python2.7-minimal_2.7.16-2+deb10u1_amd64.deb
+apt install /tmp/python2.7_2.7.18-8+deb11u1_amd64.deb
+
+echo "Récupération de l'installeur"
+wget -O /tmp/installer.deb https://updates-api.radar-prd.fsapi.com/api/1.1/ProductUpdates/Components/ScanNodeAgent/Releases/4.0.0.0/Download
+echo "Installation de l'agent, pensez a metre en place le fichier de licences"
+apt install /tmp/installer.deb
+echo "Installation terminée"
+echo "Entrez le chemin pour le fichier de lincences ainsi que sont nom"
+read chemin
+if [ -f "$chemin" ]; then
+    bash /opt/f-secure/radar-scannodeagent/ScanNodeAgent apply-license "$chemin"
+else 
+    echo "Fichier de licences introuvable"
+fi
+
+echo "Nettoyage en cours"
+rm -rf /tmp/powershell_7.4.5-1.deb
+rm -rf /tmp/libpython2.7-stdlib_2.7.16-2+deb10u1_amd64.deb
+rm -rf /tmp/python2.7-minimal_2.7.16-2+deb10u1_amd64.deb
+rm -rf /tmp/python2.7_2.7.18-8+deb11u1_amd64.deb
+rm -rf /tmp/installer.deb
+
+echo "Nettoyage terminéeé"
