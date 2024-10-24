@@ -24,13 +24,13 @@ wget -O /tmp/installer.deb https://updates-api.radar-prd.fsapi.com/api/1.1/Produ
 echo "Installation de l'agent, pensez a metre en place le fichier de licences"
 apt install /tmp/installer.deb
 echo "Installation terminée"
-echo "Entrez le chemin pour le fichier de lincences ainsi que sont nom"
-read chemin
-if [ -f "$chemin" ]; then
-    bash /opt/f-secure/radar-scannodeagent/ScanNodeAgent apply-license "$chemin"
-else 
-    echo "Fichier de licences introuvable"
-fi
+#echo "Entrez le chemin pour le fichier de lincences ainsi que sont nom"
+#read chemin
+#if [ -f "$chemin" ]; then
+#    bash /opt/f-secure/radar-scannodeagent/ScanNodeAgent apply-license "$chemin"
+#else 
+#    echo "Fichier de licences introuvable"
+#fi
 
 echo "Nettoyage en cours"
 rm  /tmp/*.deb
