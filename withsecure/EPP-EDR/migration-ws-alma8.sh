@@ -29,5 +29,5 @@ rpm -i /tmp/f-secure-linuxsecurity.rpm
 # Activation de la clé de licence
 printf "Activation de la clé de licence\n"
 # Assurez-vous de remplacer '<votreclé>' par votre clé de licence réelle
-subkey="<votreclé>"
+subkey=<votreclé>
 /opt/f-secure/linuxsecurity/bin/activate --psb --subscription-key "$subkey"
