@@ -45,9 +45,9 @@ nft add chain inet filter input { type filter hook input priority 0\; } 2>/dev/n
 nft add rule inet filter input iifname "lo" accept
 nft add rule inet filter input ct state established,related accept
 nft add rule inet filter input ct state invalid drop
-nft add rule inet filter input tcp dport 990 comment "Autoriser FTPS" accept  # FTPS
-nft add rule inet filter input tcp dport 22 comment "Autoriser SFTP/SSH" accept  # SFTP/SSH
-nft add rule inet filter input tcp dport 21 comment "Bloc FTP" drop     # Bloquer explicitement FTP standard
+nft add rule inet filter input tcp dport 990 accept  # FTPS
+nft add rule inet filter input tcp dport 22 accept  # SFTP/SSH
+nft add rule inet filter input tcp dport 21 drop     # Bloquer explicitement FTP standard
 nft add rule inet filter input drop
 
 echo "Configuration terminée. Voici les règles actuelles :"
