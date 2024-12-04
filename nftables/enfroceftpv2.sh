@@ -37,18 +37,27 @@ fi
 # Configuration des nouvelles règles
 echo "Configuration des règles pour FTPS et SFTP..."
 
-# Créer une nouvelle table et une chaîne pour le trafic entrant si elles n'existent pas déjà
+# Créer une nouvelle table et une chaîne pour le trafic entrant
 nft add table inet filter 2>/dev/null
-nft add chain inet filter input { type filter hook input priority 0\; } 2>/dev/null
+nft add chain inet filter input { type filter hook input priority 0\; policy drop\; } 2>/dev/null
 
 # Ajouter les règles
 nft add rule inet filter input iifname "lo" accept
 nft add rule inet filter input ct state established,related accept
 nft add rule inet filter input ct state invalid drop
-nft add rule inet filter input tcp dport 990 accept  # FTPS
-nft add rule inet filter input tcp dport 22 accept  # SFTP/SSH
-nft add rule inet filter input tcp dport 21 drop     # Bloquer explicitement FTP standard
-nft add rule inet filter input drop
+
+# Règles FTPS
+nft add rule inet filter input tcp dport 990 comment "FTPS control channel" accept
+nft add rule inet filter input tcp dport 30000-31000 comment "FTPS passive mode" accept
+
+# Règles SSH/SFTP
+nft add rule inet filter input tcp dport 22 comment "SSH/SFTP" accept
+
+# Bloquer explicitement FTP non sécurisé
+nft add rule inet filter input tcp dport 21 comment "Block FTP" drop
+
+# Ajout d'une règle de journalisation avant le drop final
+nft add rule inet filter input counter log prefix \"Dropped Input: \" level debug
 
 echo "Configuration terminée. Voici les règles actuelles :"
 nft list ruleset
@@ -58,13 +67,11 @@ echo "Sauvegarde des règles dans $BACKUP_FILE..."
 nft list ruleset > $BACKUP_FILE
 if [ $? -eq 0 ]; then
     echo "Les règles ont été sauvegardées avec succès."
-    echo "Pour charger ces règles au démarrage, assurez-vous que le service nftables est activé :"
-    echo "sudo systemctl enable nftables"
 else
     echo "Erreur lors de la sauvegarde des règles."
 fi
 
-# Instructions pour le chargement automatique des règles
-echo "Pour charger automatiquement ces règles au démarrage :"
-echo "1. Assurez-vous que le service nftables est installé et activé."
-echo "2. Le fichier $BACKUP_FILE sera utilisé par le service nftables au démarrage."
+# Instructions finales
+echo "Pour activer le service nftables au démarrage :"
+echo "sudo systemctl enable nftables"
+echo "sudo systemctl start nftables"
