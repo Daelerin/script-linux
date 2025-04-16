@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Vérification des dépendances
-for cmd in wget dpkg sed getent id chmod chown mv mkdir; do
+for cmd in wget dpkg sed getent id chmod chown mv mkdir ip awk cut head; do
   command -v "$cmd" >/dev/null 2>&1 || { echo "$cmd est requis mais non trouvé."; exit 1; }
 done
 
@@ -68,18 +68,47 @@ CERTGEN="/tmp/certgen-linux-amd64"
 wget -qO "$CERTGEN" "https://github.com/minio/certgen/releases/latest/download/certgen-linux-amd64" || { echo "Échec du téléchargement de certgen."; exit 1; }
 chmod +x "$CERTGEN"
 
-read -rp "Quelle est l'IP de votre serveur ? : " address
-if [[ ! "$address" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-  echo "Adresse IP invalide."
-  exit 1
+# Détection automatique ou saisie de l'adresse IP
+read -rp "Voulez vous detectez automatiquement l'adresse IP (o/n) : " multi_ip
+
+if [[ "$multi_ip" =~ ^[Nn]$ ]]; then
+  # L'utilisateur souhaite choisir l'IP manuellement
+  while true; do
+    read -rp "Quelle est l'IP de votre serveur ? : " address
+    if [[ "$address" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+      OIFS=$IFS; IFS='.' read -r o1 o2 o3 o4 <<< "$address"; IFS=$OIFS
+      if ((o1 >= 0 && o1 <= 255 && o2 >= 0 && o2 <= 255 && o3 >= 0 && o3 <= 255 && o4 >= 0 && o4 <= 255)); then
+        break
+      fi
+    fi
+    echo "Adresse IP invalide, veuillez réessayer."
+  done
+else
+  # Détection automatique avec validation utilisateur
+  while true; do
+    address=$(ip -o -4 addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -n1)
+    echo "Adresse IP détectée automatiquement : $address"
+    read -rp "Validez-vous cette IP ? (o/n) : " valid
+    if [[ "$valid" =~ ^[Oo]$ ]]; then
+      break
+    else
+      read -rp "Veuillez saisir l'adresse IP à utiliser : " address
+      if [[ "$address" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+        OIFS=$IFS; IFS='.' read -r o1 o2 o3 o4 <<< "$address"; IFS=$OIFS
+        if ((o1 >= 0 && o1 <= 255 && o2 >= 0 && o2 <= 255 && o3 >= 0 && o3 <= 255 && o4 >= 0 && o4 <= 255)); then
+          break
+        fi
+      fi
+      echo "Adresse IP invalide, veuillez réessayer."
+    fi
+  done
 fi
-OIFS=$IFS; IFS='.' read -r o1 o2 o3 o4 <<< "$address"; IFS=$OIFS
-for octet in $o1 $o2 $o3 $o4; do
-  if ((octet < 0 || octet > 255)); then
-    echo "Adresse IP invalide."
-    exit 1
-  fi
-done
+
+else
+  # Détection automatique de la première IP locale
+  address=$(ip -o -4 addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -n1)
+  echo "Adresse IP détectée automatiquement : $address"
+fi
 
 "$CERTGEN" -host "127.0.0.1,localhost,$address"
 
