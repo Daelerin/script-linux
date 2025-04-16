@@ -1,4 +1,10 @@
 #!/bin/bash
+set -euo pipefail
+
+# Vérification des dépendances
+for cmd in wget dpkg sed getent id chmod chown mv mkdir; do
+  command -v "$cmd" >/dev/null 2>&1 || { echo "$cmd est requis mais non trouvé."; exit 1; }
+done
 
 # Vérification des droits root
 if [[ $EUID -ne 0 ]]; then
@@ -36,6 +42,10 @@ if [[ ! -f "$var_defaut" ]]; then
   exit 1
 fi
 
+# Sécurisation du fichier d'environnement
+chmod 640 "$var_defaut"
+chown root:minio-user "$var_defaut"
+
 read -rp "Entrez le nom d'utilisateur admin pour la console : " user
 
 # Saisie masquée du mot de passe
@@ -49,9 +59,9 @@ while true; do
 done
 
 # Remplacement sécurisé dans le fichier d'environnement
-sed -i "s/^MINIO_ROOT_USER=.*/MINIO_ROOT_USER=\"$user\"/" "$var_defaut"
-sed -i "s/^MINIO_ROOT_PASSWORD=.*/MINIO_ROOT_PASSWORD=\"$password\"/" "$var_defaut"
-sed -i "s|^MINIO_VOLUMES=.*|MINIO_VOLUMES=\"$repo\"|" "$var_defaut"
+sed -i "s/^MINIO_ROOT_USER=.*/MINIO_ROOT_USER=\"$user\"/" "$var_defaut" || { echo "Erreur lors de la modification de MINIO_ROOT_USER."; exit 1; }
+sed -i "s/^MINIO_ROOT_PASSWORD=.*/MINIO_ROOT_PASSWORD=\"$password\"/" "$var_defaut" || { echo "Erreur lors de la modification de MINIO_ROOT_PASSWORD."; exit 1; }
+sed -i "s|^MINIO_VOLUMES=.*|MINIO_VOLUMES=\"$repo\"|" "$var_defaut" || { echo "Erreur lors de la modification de MINIO_VOLUMES."; exit 1; }
 
 # Création du certificat auto-signé
 CERTGEN="/tmp/certgen-linux-amd64"
@@ -59,14 +69,29 @@ wget -qO "$CERTGEN" "https://github.com/minio/certgen/releases/latest/download/c
 chmod +x "$CERTGEN"
 
 read -rp "Quelle est l'IP de votre serveur ? : " address
+if [[ ! "$address" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+  echo "Adresse IP invalide."
+  exit 1
+fi
+OIFS=$IFS; IFS='.' read -r o1 o2 o3 o4 <<< "$address"; IFS=$OIFS
+for octet in $o1 $o2 $o3 $o4; do
+  if ((octet < 0 || octet > 255)); then
+    echo "Adresse IP invalide."
+    exit 1
+  fi
+done
+
 "$CERTGEN" -host "127.0.0.1,localhost,$address"
 
 # Préparation du dossier certs
 CERT_DIR="/home/minio-user/.minio/certs"
 mkdir -p "$CERT_DIR"
-mv public.crt "$CERT_DIR"
-mv private.key "$CERT_DIR"
+mv public.crt "$CERT_DIR" || { echo "Erreur lors du déplacement de public.crt."; exit 1; }
+mv private.key "$CERT_DIR" || { echo "Erreur lors du déplacement de private.key."; exit 1; }
 chown -R minio-user:minio-user "/home/minio-user/.minio"
+
+# Nettoyage des fichiers temporaires
+rm -f "$MINIO_DEB" "$CERTGEN"
 
 echo "Installation complète. Voici les dernières lignes du journal MinIO :"
 journalctl -xeu minio -n 7
