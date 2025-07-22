@@ -51,7 +51,7 @@ if [ -d "glpi" ]; then
     find /var/www/glpi -type f -not -path "/var/www/glpi/config/*" -not -path "/var/www/glpi/files/*" -not -path "/var/www/glpi/marketplace/*" -not -path "/var/www/glpi/plugins/*" -delete
 
     # Réappliquez les droits d'accès corrects
-    chown -R www-data:www-data /var/www/glpi/
+    chown -R root:www-data /var/www/glpi/
 else
     echo "Le répertoire de GLPI n'existe pas";
 fi
