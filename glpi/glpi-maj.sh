@@ -13,10 +13,10 @@ if ! command -v curl &>/dev/null; then
     fi
 
     if [[ "$distribution" =~ ^(Ubuntu|Debian|debian|ubuntu)$ ]]; then
-        sudo apt update
-        sudo apt install -y curl
+        apt update
+        apt install -y curl
     elif [[ "$distribution" =~ ^(CentOS|centos|RedHat|redhat|rhel|almalinux|rocky)$ ]]; then
-        sudo yum install -y curl
+        yum install -y curl
     else
         echo "La distribution $distribution n'est pas prise en charge pour l'installation de curl."
         exit 1
