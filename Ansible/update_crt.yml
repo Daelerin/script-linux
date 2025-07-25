@@ -1,0 +1,58 @@
+---
+- name: Déployer un certificat et une clé privée + modifier automatiquement la conf des vhosts actifs
+  hosts: web
+  become: yes
+
+  vars:
+    certificat_src: "/etc/ssl/certs/yourcert.pem"
+    certificat_dest: "/etc/ssl/certs/yourcert.pem"
+    key_src: "/etc/ssl/private/private.key"
+    key_dest: "/etc/ssl/private/private.key"
+
+  tasks:
+    - name: Copier le nouveau certificat PEM sur le serveur cible
+      ansible.builtin.copy:
+        src: "{{ certificat_src }}"
+        dest: "{{ certificat_dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copier la nouvelle clé privée sur le serveur cible
+      ansible.builtin.copy:
+        src: "{{ key_src }}"
+        dest: "{{ key_dest }}"
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Lister les fichiers de vhost actifs dans sites-enabled
+      ansible.builtin.find:
+        paths: /etc/apache2/sites-enabled
+        file_type: any
+      register: enabled_vhosts
+
+    - name: Mettre à jour le chemin du certificat dans chaque vhost actif
+      ansible.builtin.shell: |
+        cert=$(grep 'SSLCertificateFile' {{ item.path }} | awk '{print $2}')
+        if [ -n "$cert" ]; then
+          sed -i "s|$cert|{{ certificat_dest }}|g" {{ item.path }}
+        fi
+      loop: "{{ enabled_vhosts.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Mettre à jour le chemin de la clé privée dans chaque vhost actif
+      ansible.builtin.shell: |
+        key=$(grep 'SSLCertificateKeyFile' {{ item.path }} | awk '{print $2}')
+        if [ -n "$key" ]; then
+          sed -i "s|$key|{{ key_dest }}|g" {{ item.path }}
+        fi
+      loop: "{{ enabled_vhosts.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Redémarrer Apache pour appliquer la nouvelle configuration
+      ansible.builtin.service:
+        name: apache2
+        state: restarted
