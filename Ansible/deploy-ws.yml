@@ -35,6 +35,6 @@ tasks:
     register: activation_result
     ignore_errors: yes
 
-  - name: Afficher le résultat de l'activation
-    debug:
-      msg: "Activation Withsecure : {{ activation_result.stdout if activation_result.stdout else 'Échec de l\'activation' }}"
+  #- name: Afficher le résultat de l'activation
+  #  debug:
+  #    msg: "Activation Withsecure : {{ activation_result.stdout if activation_result.stdout else 'Échec de l\'activation' }}"
