@@ -1,0 +1,40 @@
+---
+name: Déploiement de Withsecure
+hosts: all
+become: yes
+
+vars:
+  licence_key: "votreclé"
+
+tasks:
+  - name: Mettre à jour la liste des paquets
+    apt:
+      update_cache: yes
+
+  - name: Installer les prérequis
+    apt:
+      name:
+        - libcurl4
+        - auditd
+        - libfuse2
+        - wget
+      state: present
+
+  - name: Télécharger le paquet Withsecure
+    get_url:
+      url: "https://download.withsecure.com/PSB/latest/linuxsecurity-installer.deb"
+      dest: "/tmp/linuxsecurity.deb"
+
+  - name: Installer le paquet Withsecure
+    apt:
+      deb: "/tmp/linuxsecurity.deb"
+
+  - name: Activer la licence Withsecure
+    command: >
+      /opt/f-secure/linuxsecurity/bin/activate --psb --subscription-key {{ licence_key }}
+    register: activation_result
+    ignore_errors: yes
+
+  - name: Afficher le résultat de l'activation
+    debug:
+      msg: "Activation Withsecure : {{ activation_result.stdout if activation_result.stdout else 'Échec de l\'activation' }}"
