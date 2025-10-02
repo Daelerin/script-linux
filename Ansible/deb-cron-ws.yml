@@ -1,0 +1,34 @@
+---
+- name: Mise à jour système Linux planifiée
+  hosts: linux_servers
+  become: yes
+  vars:
+    update_day: 0
+    update_hour: 12
+    update_minute: 0
+
+  tasks:
+    - name: Déployer le script de mise à jour système
+      copy:
+        dest: /usr/local/bin/system-update.sh
+        mode: '0750'
+        content: |
+          #!/bin/bash
+          if command -v apt-get &>/dev/null; then
+            apt-get update
+            unattended-upgrade -d
+          else;
+            echo "Erreur dans la command, apt non disponible"
+          fi
+          echo "Mise à jour système effectuée le $(date)" >> /var/log/system-update.log
+
+    - name: Créer la tâche cron tous les mercredis à 19h
+      cron:
+        name: "Mise à jour système Linux Automatique"
+        user: root
+        job: "/usr/local/bin/system-update.sh"
+        minute: "0"
+        hour: "12"
+        day: "15-21"
+        month: "*"
+        weekday: "0"
