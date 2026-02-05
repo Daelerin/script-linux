@@ -1,0 +1,17 @@
+---
+- name: Déployer la clé SSH sur tous les hôtes
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    ssh_user: "root"         # utilisateur distant cible
+    ssh_pubkey_path: "~/.ssh/skeletonkey.pub"  # chemin de la clé publique sur le contrôleur
+
+  tasks:
+    - name: Ajouter la clé publique au fichier authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ ssh_user }}"
+        state: present
+        key: "{{ lookup('file', ssh_pubkey_path) }}"
+        manage_dir: true
