@@ -35,7 +35,7 @@ if sys.platform != "win32" and os.geteuid() != 0:
 
 def get_latest_garage():
     """Récupère la dernière version stable de Garage via l'API Gitea de Deuxfleurs."""
-    api_url = "https://git.deuxfleurs.fr/api/v1/repos/Deuxfleurs/garage/releases?limit=1&page=1"
+    api_url = "https://git.deuxfleurs.fr/api/v1/repos/Deuxfleurs/garage/releases?limit=50&page=1"
     try:
         response = requests.get(api_url, headers={"Accept": "application/json"}, timeout=10)
         response.raise_for_status()
@@ -43,12 +43,31 @@ def get_latest_garage():
         if not data:
             print("Aucune release trouvée sur git.deuxfleurs.fr")
             sys.exit(1)
-        version = data[0]["tag_name"].lstrip("v")  # ex: "1.3.1" ou "2.2.0"
+
+        # Filtre les pre-releases et drafts, puis trie par version sémantique
+        stable_releases = [
+            r for r in data
+            if not r.get("prerelease", False)
+            and not r.get("draft", False)
+            and re.match(r'^v?\d+\.\d+\.\d+$', r["tag_name"])  # ex: v2.2.0 uniquement
+        ]
+        if not stable_releases:
+            print("Aucune release stable trouvée.")
+            sys.exit(1)
+
+        # Tri par version sémantique (major, minor, patch)
+        def semver_key(release):
+            tag = release["tag_name"].lstrip("v")
+            parts = tag.split(".")
+            return tuple(int(x) for x in parts)
+
+        latest = sorted(stable_releases, key=semver_key, reverse=True)[0]
+        version = latest["tag_name"].lstrip("v")
         binary_url = (
             f"https://garagehq.deuxfleurs.fr/_releases/v{version}"
             f"/x86_64-unknown-linux-musl/garage"
         )
-        print(f"Dernière version de Garage détectée : v{version}")
+        print(f"Dernière version stable de Garage : v{version}")
         return binary_url, version
     except requests.RequestException as e:
         print(f"Échec de la récupération de la version Garage : {e}")
@@ -279,14 +298,57 @@ def get_latest_garage_webui():
 print("\n--- Installation de garage-webui ---")
 install_webui = input("Installer l'interface web garage-webui ? (o/n) : ").strip().lower()
 webui_installed = False
+webui_user = ""
 if install_webui == "o":
     WEBUI_BIN = "/usr/local/bin/garage-webui"
+    WEBUI_ENV = "/etc/garage/webui.env"
     webui_url, webui_version = get_latest_garage_webui()
     if webui_url:
         print(f"Téléchargement de garage-webui v{webui_version}...")
         if subprocess.call(['wget', '-qO', WEBUI_BIN, webui_url]) == 0:
             subprocess.run(['chmod', '+x', WEBUI_BIN], check=True)
-            # Service systemd pour garage-webui
+
+            # --- Authentification ---
+            auth_line = ""
+            enable_auth = input("Activer l'authentification sur le webui ? (o/n) : ").strip().lower()
+            if enable_auth == "o":
+                if shutil.which('htpasswd') is None:
+                    print("Installation de apache2-utils pour htpasswd...")
+                    subprocess.run(['apt', 'install', '-y', 'apache2-utils'],
+                                   stdout=subprocess.DEVNULL, check=True)
+                webui_user = input("Nom d'utilisateur webui : ").strip() or "admin"
+                import getpass
+                while True:
+                    webui_pass = getpass.getpass("Mot de passe webui : ")
+                    webui_pass2 = getpass.getpass("Confirmez le mot de passe : ")
+                    if webui_pass == webui_pass2:
+                        break
+                    print("Les mots de passe ne correspondent pas.")
+                try:
+                    hash_output = subprocess.check_output(
+                        ['htpasswd', '-bnBC', '10', webui_user, webui_pass],
+                        text=True
+                    ).strip()
+                    auth_line = f"AUTH_USER_PASS={hash_output}"
+                    print("Hash d'authentification généré.")
+                except Exception as e:
+                    print(f"Erreur lors de la génération du hash : {e}")
+                    auth_line = ""
+
+            # --- Fichier d'environnement ---
+            env_content = f"""PORT=3909
+CONFIG_PATH={CONFIG_FILE}
+API_BASE_URL=http://127.0.0.1:3903
+"""
+            if auth_line:
+                env_content += f"{auth_line}\n"
+
+            with open(WEBUI_ENV, 'w', encoding='utf-8') as f:
+                f.write(env_content)
+            subprocess.run(['chmod', '640', WEBUI_ENV], check=True)
+            subprocess.run(['chown', 'root:garage', WEBUI_ENV], check=True)
+
+            # --- Service systemd ---
             WEBUI_SERVICE = "/etc/systemd/system/garage-webui.service"
             webui_service_content = f"""[Unit]
 Description=Garage Web UI
@@ -294,8 +356,7 @@ After=garage.service
 Requires=garage.service
 
 [Service]
-Environment="PORT=3909"
-Environment="CONFIG_PATH={CONFIG_FILE}"
+EnvironmentFile={WEBUI_ENV}
 ExecStart={WEBUI_BIN}
 Restart=always
 RestartSec=5s
@@ -308,12 +369,12 @@ WantedBy=multi-user.target
             subprocess.run(['systemctl', 'daemon-reload'], check=True)
             subprocess.run(['systemctl', 'enable', 'garage-webui'], check=True)
             subprocess.run(['systemctl', 'start', 'garage-webui'], check=True)
-            print(f"garage-webui v{webui_version} installé et démarré.")
+            print(f"garage-webui v{webui_version} installe et demarre.")
             webui_installed = True
         else:
-            print("Échec du téléchargement de garage-webui. À installer manuellement.")
+            print("Echec du telechargement de garage-webui. A installer manuellement.")
     else:
-        print("Impossible de récupérer garage-webui. À installer manuellement.")
+        print("Impossible de recuperer garage-webui. A installer manuellement.")
 
 # --- Résumé ---
 print("\n" + "="*60)
@@ -332,6 +393,8 @@ print(f"  Web statique   : http://{address}:3902")
 print(f"  Admin API      : http://{address}:3903")
 if webui_installed:
     print(f"  Interface Web  : http://{address}:3909")
+    if webui_user:
+        print(f"  WebUI User     : {webui_user}")
     print(f"  WebUI Token    : {admin_token}")
 print("\nPour voir les logs :")
 print("  journalctl -xeu garage -n 20")
@@ -339,6 +402,8 @@ if webui_installed:
     print("  journalctl -xeu garage-webui -n 20")
     print(f"\nConnexion garage-webui :")
     print(f"  URL   : http://{address}:3909")
+    if webui_user:
+        print(f"  Login : {webui_user} / (mot de passe choisi)")
     print(f"  Token : {admin_token}")
     print(f"  (coller le token dans le champ 'Admin Token' de l'interface)")
 print("\nPour créer un bucket :")
